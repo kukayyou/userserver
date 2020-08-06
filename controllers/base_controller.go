@@ -8,6 +8,7 @@ import (
 	"github.com/kukayyou/commonlib/mylog"
 	"github.com/kukayyou/commonlib/token"
 	"io/ioutil"
+	"time"
 )
 
 //错误码
@@ -33,6 +34,7 @@ type BaseController struct {
 	mylog.LogInfo
 	ReqParams   []byte
 	ServerToken string
+	StartTime   time.Time
 	Resp        Response
 }
 
@@ -40,68 +42,80 @@ type Response struct {
 	Code      int64       `json:"code"`      //错误码
 	Msg       string      `json:"msg"`       //错误信息
 	RequestID string      `json:"requestId"` //请求id
+	CostTime  string      `json:"costTime"`  //请求耗时
 	Data      interface{} `json:"data"`      //返回数据
 }
 
-func (bc *BaseController) Prepare(c *gin.Context) {
+func (bc *BaseController) Prepare(ctx *gin.Context) {
+	bc.StartTime = time.Now()
 	//设置requestid
 	bc.SetRequestId()
 	//设置请求url
-	bc.SetRequestUrl(c.Request.RequestURI)
+	bc.SetRequestUrl(ctx.Request.RequestURI)
 	//设置返回requestid
 	bc.Resp.RequestID = bc.GetRequestId()
 	//获取请求参数
-	bc.ReqParams, _ = ioutil.ReadAll(c.Request.Body)
+	bc.ReqParams, _ = ioutil.ReadAll(ctx.Request.Body)
 
 	mylog.Info("requestId:%s, requestUrl:%s, params : %s", bc.GetRequestId(), bc.GetRequestUrl(), string(bc.ReqParams))
 }
 
-func (bc *BaseController) PrepareIris(c iris.Context) {
+func (bc *BaseController) PrepareIris(ctx iris.Context) {
+	//执行开始时间
+	bc.StartTime = time.Now()
 	//设置requestid
 	bc.SetRequestId()
 	//设置请求url
-	bc.SetRequestUrl(c.Request().RequestURI)
+	bc.SetRequestUrl(ctx.Request().RequestURI)
 	//设置返回requestid
 	bc.Resp.RequestID = bc.GetRequestId()
 	//获取请求参数
-	bc.ReqParams, _ = ioutil.ReadAll(c.Request().Body)
+	bc.ReqParams, _ = ioutil.ReadAll(ctx.Request().Body)
 
-	mylog.Info("requestId:%s, requestUrl:%s, params : %s", bc.GetRequestId(), bc.GetRequestUrl(), string(bc.ReqParams))
+	mylog.SugarLogger.Info(fmt.Sprintf("requestId:%s, requestUrl:%s, params : %s", bc.GetRequestId(), bc.GetRequestUrl(), string(bc.ReqParams)))
 }
 
-func (bc *BaseController) FinishResponse(c *gin.Context) {
+func (bc *BaseController) FinishResponse(ctx *gin.Context) {
+	//执行结束时间
+	endTime := time.Now()
+	bc.Resp.CostTime = fmt.Sprintf("%4v", endTime.Sub(bc.StartTime))
 	if len(bc.Resp.Msg) <= 0 {
 		bc.Resp.Msg = "success"
 	}
-	c.JSON(200,
+	ctx.JSON(200,
 		gin.H{
 			"errcode":   bc.Resp.Code,
 			"errmsg":    bc.Resp.Msg,
 			"requestId": bc.Resp.RequestID,
+			"costTime":  bc.Resp.CostTime,
 			"data":      bc.Resp.Data,
 		})
 	r, _ := json.Marshal(bc.Resp)
 	mylog.Info("requestUrl:%s, response data:%s", bc.GetRequestUrl(), string(r))
 }
 
-func (bc *BaseController) FinishResponseIris(c iris.Context) {
+func (bc *BaseController) FinishResponseIris(ctx iris.Context) {
+	//执行结束时间
+	endTime := time.Now()
+	bc.Resp.CostTime = fmt.Sprintf("%4v", endTime.Sub(bc.StartTime))
 	if len(bc.Resp.Msg) <= 0 {
 		bc.Resp.Msg = "success"
 	}
 
-	_, err := c.JSON(iris.Map{
+	_, err := ctx.JSON(iris.Map{
 		"errcode":   bc.Resp.Code,
 		"errmsg":    bc.Resp.Msg,
 		"requestId": bc.Resp.RequestID,
+		"costTime":  bc.Resp.CostTime,
 		"data":      bc.Resp.Data,
 	})
 
 	if err != nil {
-		mylog.Error("requestId:%s, requestUrl:%s, response data err:%s", bc.Resp.RequestID, bc.GetRequestUrl(), err.Error())
+		mylog.SugarLogger.Error(fmt.Sprintf("requestId:%s, requestUrl:%s, response data err:%s", bc.Resp.RequestID, bc.GetRequestUrl(), err.Error()))
 	}
 
 	r, _ := json.Marshal(bc.Resp)
-	mylog.Info("requestUrl:%s, response data:%s", bc.GetRequestUrl(), string(r))
+	mylog.SugarLogger.Info(fmt.Sprintf("requestUrl:%s, response data:%s", bc.GetRequestUrl(), string(r)))
 }
 
 func (bc *BaseController) CheckToken(userID, tokenData string) (err error) {
