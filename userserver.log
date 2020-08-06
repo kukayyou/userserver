@@ -1,0 +1,9 @@
+2020-08-05T14:30:06+08:00	INFO	 <gid:1> begin to init mysql connection pool
+2020-08-05T14:30:28+08:00	ERROR	 <gid:1> mysql error:register mysql database fail, register db Ping `default`, dial tcp 192.168.109.131:3306: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+2020-08-05T14:30:28+08:00	ERROR	 <gid:1> initialize connection pool fail
+2020-08-05T18:01:09+08:00	INFO	 <gid:86> requestId:userserver-172.16.6.71-1596621669.52814500.167, requestUrl:/userserver/user/registry, params : {"userName":"15667073685","passwd":"123456"}
+2020-08-05T18:01:29+08:00	INFO	 <gid:86> requestID userserver-172.16.6.71-1596621669.52814500.167, sql:SELECT user_id FROM user order by user_id DESC limit 1
+2020-08-05T18:02:15+08:00	INFO	 <gid:27> requestId:userserver-172.16.6.71-1596621735.559542300.376, requestUrl:/userserver/user/registry, params : {"userName":"15667073685","passwd":"123456"}
+2020-08-05T18:02:15+08:00	INFO	 <gid:27> requestID userserver-172.16.6.71-1596621735.559542300.376, sql:SELECT user_id FROM user order by user_id DESC limit 1
+2020-08-05T18:02:47+08:00	INFO	 <gid:38> requestId:userserver-172.16.6.71-1596621767.972944600.266, requestUrl:/userserver/user/registry, params : {"userName":"15667073685","passwd":"123456"}
+2020-08-05T18:02:47+08:00	INFO	 <gid:38> requestUrl:/userserver/user/registry, response data:{"code":0,"msg":"success","requestId":"userserver-172.16.6.71-1596621767.972944600.266","data":{"userId":"","userType":0,"userName":"15667073685","nickName":"","passwd":"","mobile":"","email":"","sex":"","age":0,"university":"","location":"","profilePic":"","token":""}}

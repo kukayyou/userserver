@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/kataras/iris"
 	"github.com/kukayyou/commonlib/mylog"
 	"github.com/kukayyou/commonlib/token"
 	"io/ioutil"
@@ -36,7 +37,7 @@ type BaseController struct {
 }
 
 type Response struct {
-	Code      int64         `json:"code"`      //错误码
+	Code      int64       `json:"code"`      //错误码
 	Msg       string      `json:"msg"`       //错误信息
 	RequestID string      `json:"requestId"` //请求id
 	Data      interface{} `json:"data"`      //返回数据
@@ -55,17 +56,50 @@ func (bc *BaseController) Prepare(c *gin.Context) {
 	mylog.Info("requestId:%s, requestUrl:%s, params : %s", bc.GetRequestId(), bc.GetRequestUrl(), string(bc.ReqParams))
 }
 
+func (bc *BaseController) PrepareIris(c iris.Context) {
+	//设置requestid
+	bc.SetRequestId()
+	//设置请求url
+	bc.SetRequestUrl(c.Request().RequestURI)
+	//设置返回requestid
+	bc.Resp.RequestID = bc.GetRequestId()
+	//获取请求参数
+	bc.ReqParams, _ = ioutil.ReadAll(c.Request().Body)
+
+	mylog.Info("requestId:%s, requestUrl:%s, params : %s", bc.GetRequestId(), bc.GetRequestUrl(), string(bc.ReqParams))
+}
+
 func (bc *BaseController) FinishResponse(c *gin.Context) {
 	if len(bc.Resp.Msg) <= 0 {
 		bc.Resp.Msg = "success"
 	}
 	c.JSON(200,
 		gin.H{
-			"errcode":      bc.Resp.Code,
-			"errmsg":       bc.Resp.Msg,
+			"errcode":   bc.Resp.Code,
+			"errmsg":    bc.Resp.Msg,
 			"requestId": bc.Resp.RequestID,
 			"data":      bc.Resp.Data,
 		})
+	r, _ := json.Marshal(bc.Resp)
+	mylog.Info("requestUrl:%s, response data:%s", bc.GetRequestUrl(), string(r))
+}
+
+func (bc *BaseController) FinishResponseIris(c iris.Context) {
+	if len(bc.Resp.Msg) <= 0 {
+		bc.Resp.Msg = "success"
+	}
+
+	_, err := c.JSON(iris.Map{
+		"errcode":   bc.Resp.Code,
+		"errmsg":    bc.Resp.Msg,
+		"requestId": bc.Resp.RequestID,
+		"data":      bc.Resp.Data,
+	})
+
+	if err != nil {
+		mylog.Error("requestId:%s, requestUrl:%s, response data err:%s", bc.Resp.RequestID, bc.GetRequestUrl(), err.Error())
+	}
+
 	r, _ := json.Marshal(bc.Resp)
 	mylog.Info("requestUrl:%s, response data:%s", bc.GetRequestUrl(), string(r))
 }

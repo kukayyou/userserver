@@ -27,8 +27,7 @@ type WxLoginReq struct {
 	Grant_Type string `json:"grant_type"` //授权类型，此处只需填写 authorization_code
 }
 
-func (wr *WxLoginReq) CheckMiniUser(requestID string) (*WxLoginResp, error) {
-	var wxResp WxLoginResp
+func (wr *WxLoginReq) CheckMiniUser(requestID string) (wxResp *WxLoginResp, err error) {
 	reqUrl := config.WxDomain + "/sns/jscode2session"
 	reqUrl = buildQueryUrl(reqUrl, *wr)
 	resp, err := http.Get(reqUrl)
@@ -50,11 +49,11 @@ func (wr *WxLoginReq) CheckMiniUser(requestID string) (*WxLoginResp, error) {
 			45011：频率限制，每个用户每分钟100次
 			*/
 			mylog.Error("requestID:%s, wx login errcode is:%d", requestID, wxResp.ErrCode)
-			return &wxResp, fmt.Errorf("wx login errcode is:%d", wxResp.ErrCode)
+			return nil, fmt.Errorf("wx login errcode is:%d", wxResp.ErrCode)
 		}
 	}
 
-	return &wxResp, nil
+	return wxResp, nil
 }
 
 func buildQueryUrl(reqUrl string, params WxLoginReq) string {
