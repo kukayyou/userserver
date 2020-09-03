@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,7 @@ type BaseController struct {
 	ServerToken string
 	StartTime   time.Time
 	Resp        Response
+	ReqContext  context.Context
 }
 
 type Response struct {
@@ -50,8 +52,10 @@ func (bc *BaseController) Prepare(ctx *gin.Context) {
 	bc.StartTime = time.Now()
 	//设置requestid
 	bc.SetRequestId()
+	bc.ReqContext = context.WithValue(context.TODO(), "requestID", bc.GetRequestId())
 	//设置请求url
 	bc.SetRequestUrl(ctx.Request.RequestURI)
+	bc.ReqContext = context.WithValue(bc.ReqContext, "requestUrl", bc.GetRequestUrl())
 	//设置返回requestid
 	bc.Resp.RequestID = bc.GetRequestId()
 	//获取请求参数
@@ -65,8 +69,10 @@ func (bc *BaseController) PrepareIris(ctx iris.Context) {
 	bc.StartTime = time.Now()
 	//设置requestid
 	bc.SetRequestId()
+	bc.ReqContext = context.WithValue(context.TODO(), "requestID", bc.GetRequestId())
 	//设置请求url
 	bc.SetRequestUrl(ctx.Request().RequestURI)
+	bc.ReqContext = context.WithValue(bc.ReqContext, "requestUrl", bc.GetRequestUrl())
 	//设置返回requestid
 	bc.Resp.RequestID = bc.GetRequestId()
 	//获取请求参数

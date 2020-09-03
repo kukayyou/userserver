@@ -36,6 +36,7 @@ func (this MiniUserLoginController) MiniUserLoginApi(c *gin.Context) {
 		params MiniUserLoginRequest
 		err    error
 	)
+
 	//解析参数
 	if err = json.Unmarshal(this.ReqParams, &params); err != nil {
 		mylog.Error("requestID:%s, Unmarshal request failed!", this.GetRequestId())
